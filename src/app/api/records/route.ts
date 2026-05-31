@@ -54,39 +54,15 @@ async function geocodeLocation(location: string): Promise<{ lat: number; lon: nu
   return { lat: point.lat, lon: point.lon, name: point.name };
 }
 
-async function fetchWeatherForRange(
-  lat: number,
-  lon: number,
-  dateFrom: string,
-  dateTo: string
-): Promise<DailyWeather[]> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const fromDate = new Date(dateFrom);
-  const toDate = new Date(dateTo);
+function formatDate(d: Date): string {
+  return d.toISOString().split('T')[0];
+}
 
-  // Determine whether to use archive or forecast API
-  const archiveCutoff = new Date(today);
-  archiveCutoff.setDate(archiveCutoff.getDate() - 5);
-
-  let url: string;
-
-  if (toDate < archiveCutoff) {
-    // All past data — use archive
-    url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${dateFrom}&end_date=${dateTo}&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,weathercode&timezone=auto`;
-  } else if (fromDate >= today) {
-    // All future data — use forecast
-    url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${dateFrom}&end_date=${dateTo}&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,weathercode&timezone=auto`;
-  } else {
-    // Spans past and future — use forecast which covers recent past too
-    url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${dateFrom}&end_date=${dateTo}&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,weathercode&timezone=auto&past_days=92`;
-  }
-
+async function fetchFromMeteo(url: string): Promise<DailyWeather[]> {
   const res = await fetch(url);
   if (!res.ok) return [];
   const data = await res.json();
   if (!data.daily || !data.daily.time) return [];
-
   return data.daily.time.map((date: string, i: number) => {
     const code = data.daily.weathercode?.[i] ?? 0;
     const { description, icon } = wmoToDescription(code);
@@ -99,6 +75,54 @@ async function fetchWeatherForRange(
       icon,
     };
   });
+}
+
+async function fetchWeatherForRange(
+  lat: number,
+  lon: number,
+  dateFrom: string,
+  dateTo: string
+): Promise<DailyWeather[]> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const fromDate = new Date(dateFrom);
+  const toDate = new Date(dateTo);
+
+  const archiveCutoff = new Date(today);
+  archiveCutoff.setDate(archiveCutoff.getDate() - 5);
+
+  const DAILY = 'daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,weathercode&timezone=auto';
+
+  if (toDate < archiveCutoff) {
+    // Entirely in the past — archive API only
+    return fetchFromMeteo(
+      `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${dateFrom}&end_date=${dateTo}&${DAILY}`
+    );
+  }
+
+  if (fromDate >= today) {
+    // Entirely in the future — forecast API only
+    return fetchFromMeteo(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${dateFrom}&end_date=${dateTo}&${DAILY}`
+    );
+  }
+
+  // Mixed range: split into archive (past) + forecast (recent/future)
+  const results: DailyWeather[][] = [];
+
+  if (fromDate < archiveCutoff) {
+    const archiveEnd = toDate < archiveCutoff ? dateTo : formatDate(new Date(archiveCutoff.getTime() - 86400000));
+    results.push(await fetchFromMeteo(
+      `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${dateFrom}&end_date=${archiveEnd}&${DAILY}`
+    ));
+  }
+
+  const forecastStart = fromDate >= archiveCutoff ? dateFrom : formatDate(archiveCutoff);
+  results.push(await fetchFromMeteo(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&start_date=${forecastStart}&end_date=${dateTo}&${DAILY}`
+  ));
+
+  return results.flat();
 }
 
 // GET /api/records — list all records
