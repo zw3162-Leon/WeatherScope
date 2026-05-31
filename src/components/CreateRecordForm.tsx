@@ -51,7 +51,7 @@ export default function CreateRecordForm({ onCreated }: Props) {
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">📝 Create Weather Record</h3>
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">Create Weather Record</h3>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
@@ -107,12 +107,12 @@ export default function CreateRecordForm({ onCreated }: Props) {
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
-            ❌ {error}
+            {error}
           </div>
         )}
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-3 py-2">
-            ✅ {success}
+            {success}
           </div>
         )}
 
@@ -121,7 +121,7 @@ export default function CreateRecordForm({ onCreated }: Props) {
           disabled={loading}
           className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? '⏳ Fetching & Saving…' : '💾 Create Record'}
+          {loading ? 'Fetching & Saving…' : 'Create Record'}
         </button>
       </form>
     </div>

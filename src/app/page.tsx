@@ -9,6 +9,7 @@ import CreateRecordForm from '@/components/CreateRecordForm';
 import ExportPanel from '@/components/ExportPanel';
 import AboutSection from '@/components/AboutSection';
 import type { CurrentWeatherData, ForecastDay, WeatherRecord } from '@/types';
+import WeatherBackground, { getWeatherTheme } from '@/components/WeatherBackground';
 
 type Tab = 'weather' | 'records' | 'export' | 'about';
 
@@ -131,13 +132,20 @@ export default function Home() {
     ? `https://www.openstreetmap.org/export/embed.html?bbox=${lastCoords.lon - 0.08},${lastCoords.lat - 0.08},${lastCoords.lon + 0.08},${lastCoords.lat + 0.08}&layer=mapnik&marker=${lastCoords.lat},${lastCoords.lon}`
     : null;
 
+  const theme = getWeatherTheme(weather?.icon);
+  const isDark = ['clear-night', 'rainy', 'storm', 'cloudy'].includes(theme);
+  const headingCls = isDark ? 'text-white drop-shadow-md' : 'text-gray-800';
+  const subCls     = isDark ? 'text-white/70' : 'text-gray-500';
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
+      <WeatherBackground icon={weather?.icon} />
+
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+      <header className="bg-white/80 backdrop-blur-md border-b border-white/30 shadow-sm sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
           <div>
-            <h1 className="text-xl font-bold text-blue-700">🌍 WeatherScope</h1>
+            <h1 className="text-xl font-bold text-blue-700">WeatherScope</h1>
             <p className="text-xs text-gray-400">by Zhiliang Wang · PM Accelerator Technical Assessment</p>
           </div>
           <nav className="flex gap-1 overflow-x-auto">
@@ -151,7 +159,7 @@ export default function Home() {
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                {t.icon} {t.label}
+                {t.label}
               </button>
             ))}
           </nav>
@@ -165,8 +173,8 @@ export default function Home() {
         {tab === 'weather' && (
           <div className="space-y-5">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-800">Real-Time Weather</h2>
-              <p className="text-sm text-gray-500 mt-1">Search by city, zip code, coordinates, or landmark</p>
+              <h2 className={`text-2xl font-bold ${headingCls}`}>Real-Time Weather</h2>
+              <p className={`text-sm mt-1 ${subCls}`}>Search by city, zip code, coordinates, or landmark</p>
             </div>
 
             <SearchBar
@@ -260,7 +268,7 @@ export default function Home() {
 
         {/* ── RECORDS TAB ── */}
         {tab === 'records' && (
-          <div className="space-y-5">
+          <div className="space-y-5 bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-sm">
             <div>
               <h2 className="text-2xl font-bold text-gray-800">Weather Records</h2>
               <p className="text-sm text-gray-500 mt-1">Store, view, update, and delete weather data by location and date range</p>
@@ -288,7 +296,7 @@ export default function Home() {
 
         {/* ── EXPORT TAB ── */}
         {tab === 'export' && (
-          <div className="space-y-5">
+          <div className="space-y-5 bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-sm">
             <div>
               <h2 className="text-2xl font-bold text-gray-800">Export Data</h2>
               <p className="text-sm text-gray-500 mt-1">
@@ -306,7 +314,7 @@ export default function Home() {
 
         {/* ── ABOUT TAB ── */}
         {tab === 'about' && (
-          <div className="space-y-5">
+          <div className="space-y-5 bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-sm">
             <div>
               <h2 className="text-2xl font-bold text-gray-800">About</h2>
               <p className="text-sm text-gray-500 mt-1">Developer info and project details</p>
@@ -317,7 +325,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-10 border-t border-gray-200 bg-white">
+      <footer className="mt-10 border-t border-white/30 bg-white/70 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400">
           <p>WeatherScope · Built by <strong className="text-gray-600">Zhiliang Wang</strong> for PM Accelerator Technical Assessment</p>
           <p>Powered by OpenWeatherMap · Open-Meteo · OpenStreetMap</p>

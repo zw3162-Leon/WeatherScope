@@ -15,7 +15,7 @@ export default function ExportPanel() {
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-      <h3 className="text-lg font-semibold text-gray-800 mb-1">📤 Export Records</h3>
+      <h3 className="text-lg font-semibold text-gray-800 mb-1">Export Records</h3>
       <p className="text-sm text-gray-500 mb-5">Download all stored weather records in your preferred format.</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -25,7 +25,6 @@ export default function ExportPanel() {
             onClick={() => handleExport(fmt.key)}
             className={`border rounded-xl p-4 text-left transition-all ${fmt.color}`}
           >
-            <div className="text-2xl font-mono font-bold mb-1">{fmt.icon}</div>
             <p className="font-semibold text-sm">{fmt.label}</p>
             <p className="text-xs opacity-75 mt-0.5">{fmt.desc}</p>
           </button>
